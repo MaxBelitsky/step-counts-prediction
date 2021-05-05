@@ -1,0 +1,75 @@
+steps_date:
+  models:
+    RNN:
+      units: 
+      lr: 
+      m_batch_size: 
+    LSTM:
+      units: 
+      lr: 
+      m_batch_size: 
+    BLSTM:
+      units: 
+      lr: 
+      m_batch_size: 
+    GRU:
+      units: 
+      lr: 
+      m_batch_size: 
+    ConvLSTM:
+      units: 
+      lr: 
+      m_batch_size:
+  lag: [1, 7, 14, 21, 28]
+  future: 1
+# ------------------ 
+steps_hour:
+  models:
+    RNN:
+      units: 
+      lr: 
+      m_batch_size: 
+    LSTM:
+      units: 
+      lr: 
+      m_batch_size: 
+    BLSTM:
+      units: 
+      lr: 
+      m_batch_size: 
+    GRU:
+      units: 
+      lr: 
+      m_batch_size: 
+    ConvLSTM:
+      units: 
+      lr: 
+      m_batch_size: 
+  lag: [24, 48, 72]
+  future: 24
+# ------------------
+augmented_steps_date:
+  models:
+    RNN:
+      units: 
+      lr: 
+      m_batch_size: 
+    LSTM:
+      units: 
+      lr: 
+      m_batch_size: 
+    BLSTM:
+      units: 
+      lr: 
+      m_batch_size: 
+    GRU:
+      units: 
+      lr: 
+      m_batch_size: 
+    ConvLSTM:
+      units: 
+      lr: 
+      m_batch_size: 
+  lag: [1, 7, 14, 21, 28]
+  future: 1
+
