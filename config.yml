@@ -2,24 +2,24 @@ steps_date:
   models:
     RNN:
       units: 1
-      lr: 0.01
+      lr: 0.001
       m_batch_size: 8
     LSTM:
-      units: 
-      lr: 
-      m_batch_size: 
+      units: 1
+      lr: 0.001
+      m_batch_size: 8
     BLSTM:
-      units: 
-      lr: 
-      m_batch_size: 
+      units: 1
+      lr: 0.001
+      m_batch_size: 8
     GRU:
-      units: 
-      lr: 
-      m_batch_size: 
+      units: 1
+      lr: 0.001
+      m_batch_size: 8
     ConvLSTM:
       units: 
-      lr: 
-      m_batch_size:
+      lr: 0.001
+      m_batch_size: 8
   lag: [1, 7, 14, 21, 28]
   future: 1
 # ------------------ 
@@ -30,21 +30,21 @@ steps_hour:
       lr: 0.01
       m_batch_size: 16
     LSTM:
-      units: 
-      lr: 
-      m_batch_size: 
+      units: 1
+      lr: 0.001
+      m_batch_size: 16
     BLSTM:
-      units: 
-      lr: 
-      m_batch_size: 
+      units: 1
+      lr: 0.001
+      m_batch_size: 16
     GRU:
-      units: 
-      lr: 
-      m_batch_size: 
+      units: 1
+      lr: 0.001
+      m_batch_size: 16
     ConvLSTM:
       units: 
-      lr: 
-      m_batch_size: 
+      lr: 0.001
+      m_batch_size: 16
   lag: [24, 48, 72]
   future: 24
 # ------------------
@@ -55,21 +55,20 @@ augmented_steps_date:
       lr: 0.01
       m_batch_size: 8
     LSTM:
-      units: 
-      lr: 
-      m_batch_size: 
+      units: 1
+      lr: 0.001
+      m_batch_size: 8
     BLSTM:
-      units: 
-      lr: 
-      m_batch_size: 
+      units: 1
+      lr: 0.001
+      m_batch_size: 8
     GRU:
-      units: 
-      lr: 
-      m_batch_size: 
+      units: 1
+      lr: 0.001
+      m_batch_size: 8
     ConvLSTM:
-      units: 
-      lr: 
-      m_batch_size: 
+      units: 1
+      lr: 0.001
+      m_batch_size: 8
   lag: [1, 7, 14, 21, 28]
   future: 1
-

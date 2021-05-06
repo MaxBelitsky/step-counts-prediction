@@ -4,7 +4,7 @@ import yaml
 
 from utils.preprocessing import aggregate_steps, augment, to_supervised
 from models import naive, average, simple_RNN, vanilla_LSTM, BLSTM, Conv_LSTM
-from container import ModelContainer, create_containers
+from container import ModelContainer
 from sklearn.metrics import mean_absolute_error, mean_squared_error
 import matplotlib.pyplot as plt
 from math import sqrt
@@ -21,26 +21,45 @@ with open("config.yml", 'r') as handle:
     config = yaml.safe_load(handle)
 
 # Create 3 datasets
-"""steps_date = aggregate_steps(data, ['date']).Steps
+steps_date = aggregate_steps(data, ['date']).Steps
 steps_hour = aggregate_steps(data, ['date', 'hour']).Steps
-augmented_steps_date = augment(data)"""
+augmented_steps_date = augment(data)
 
-steps_date = pd.DataFrame(np.arange(0, 1000))
+print(steps_date.shape)
+print(steps_hour.shape)
+print(augmented_steps_date.shape)
+
+"""steps_date = pd.DataFrame(np.arange(0, 1000))
 steps_hour = pd.DataFrame(np.arange(0, 1000))
-augmented_steps_date = pd.DataFrame(np.arange(0, 10000).reshape(1000, 10))
+augmented_steps_date = pd.DataFrame(np.arange(0, 10000).reshape(1000, 10))"""
 
 all_models = {}
 
 # Fill the containers with data
 for dataset in config:
-    create_containers(config[dataset], eval(dataset), all_models)
+    lags = config[dataset]["lag"]
+    future = config[dataset]["future"]
+
+    for lag in lags:
+
+        for model in config[dataset]["models"]:
+            if dataset == "augmented_steps_date":
+                name = model + f"_{lag}_{future}_aug"
+            else:
+                name = model + f"_{lag}_{future}"
+
+            all_models[name] = ModelContainer(
+                name, model, config[dataset]["models"][model], 
+                eval(dataset), lag, future)
+
 
 # Create two results DataFrames
-results_date = pd.DataFrame(columns=["Model", "Lag", "Future", "MAE", "RMSE", "Error_Steps"])
-results_hour = pd.DataFrame(columns=["Model", "Lag", "Future", "MAE", "RMSE", "Error_Steps"])
+results_date = pd.DataFrame(columns=["Model", "Lag", "MAE", "RMSE", "Error_Steps"])
+results_hour = pd.DataFrame(columns=["Model", "Lag", "MAE", "RMSE", "Error_Steps"])
 
-
+#EPOCHS = 1000
 row = 0
+
 for i in all_models:
     if i.startswith("RNN"):
         current = all_models[i]
@@ -50,7 +69,8 @@ for i in all_models:
         m_batch_size = current.hyperparams['m_batch_size']
         #n_timesteps
 
-        model = simple_RNN(units, current.X_train.shape[1], current.X_train.shape[2], current.future)
+        model = simple_RNN(units, current.X_train.shape[1],
+                        current.X_train.shape[2], current.future)
         
         history = model.fit(
             current.X_train,
@@ -73,13 +93,13 @@ for i in all_models:
 
         if current.future == 1:
             results_date.loc[row] = [
-                            current.name, current.lag, current.future,
+                            current.name, current.lag,
                             round(mae, 4),
                             round(rmse, 4),
                             error_steps]
         else:
             results_hour.loc[row] = [
-                            current.name, current.lag, current.future,
+                            current.name, current.lag,
                             round(mae, 4),
                             round(rmse, 4),
                             error_steps]
