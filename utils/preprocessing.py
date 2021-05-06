@@ -23,8 +23,8 @@ def to_supervised(sequence, n_previous, n_future):
         X.append(sequence[i:idx])
         y.append(sequence[idx:idx+n_future])
         i += 1
-        
-    return np.array(X), np.array(y)
+
+    return np.array(X), np.array(y).squeeze()
 
 
 def convert_steps(steps, exclude_corona=True):

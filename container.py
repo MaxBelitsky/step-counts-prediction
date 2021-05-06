@@ -53,18 +53,17 @@ def create_containers(config, data, containers):
     train_data = data[0:int(n*0.8)]
     val_data = data[int(n*0.8):int(n*0.9)]
     test_data = data[int(n*0.9):]
-
     # Normalize the data with MinMax normalization
     scaler = MinMaxScaler()
-    # TODO: fix the normalization, such that for the augmented dataset, only the steps are normalized
     if data.shape[1] == 1:
         train_data = scaler.fit_transform(train_data.to_numpy().reshape(-1, 1))
         val_data = scaler.transform(val_data.to_numpy().reshape(-1, 1))
         test_data = scaler.transform(test_data.to_numpy().reshape(-1, 1))
     else:
-        train_data = scaler.fit_transform(train_data.to_numpy())
-        val_data = scaler.transform(val_data.to_numpy())
-        test_data = scaler.transform(test_data.to_numpy())
+        # TODO: df["Steps"] instead of .iloc
+        train_data.iloc[:, 0] = scaler.fit_transform(train_data.iloc[:, 0].to_numpy().reshape(-1, 1))
+        val_data.iloc[:, 0] = scaler.transform(val_data.iloc[:, 0].to_numpy().reshape(-1, 1))
+        test_data.iloc[:, 0] = scaler.transform(test_data.iloc[:, 0].to_numpy().reshape(-1, 1))
 
     for i in models:
         for lag in config['lag']:
@@ -89,7 +88,11 @@ def create_containers(config, data, containers):
                     lag,
                     config['future']
                     )
-
+                
+                if data.shape[1] != 1:
+                    y_train = y_train[:, 0]
+                    y_val = y_val[:, 0]
+                    y_test = y_test[:, 0]
 
                 # Reshape to (samples, timesteps, features)
                 n_features = train_data.shape[1]

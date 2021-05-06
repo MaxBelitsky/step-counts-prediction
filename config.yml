@@ -1,9 +1,9 @@
 steps_date:
   models:
     RNN:
-      units: 
-      lr: 
-      m_batch_size: 
+      units: 1
+      lr: 0.01
+      m_batch_size: 8
     LSTM:
       units: 
       lr: 
@@ -26,9 +26,9 @@ steps_date:
 steps_hour:
   models:
     RNN:
-      units: 
-      lr: 
-      m_batch_size: 
+      units: 1
+      lr: 0.01
+      m_batch_size: 16
     LSTM:
       units: 
       lr: 
@@ -51,9 +51,9 @@ steps_hour:
 augmented_steps_date:
   models:
     RNN:
-      units: 
-      lr: 
-      m_batch_size: 
+      units: 1
+      lr: 0.01
+      m_batch_size: 8
     LSTM:
       units: 
       lr: 

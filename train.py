@@ -5,6 +5,11 @@ import yaml
 from utils.preprocessing import aggregate_steps, augment, to_supervised
 from models import naive, average, simple_RNN, vanilla_LSTM, BLSTM, Conv_LSTM
 from container import ModelContainer, create_containers
+from sklearn.metrics import mean_absolute_error, mean_squared_error
+import matplotlib.pyplot as plt
+from math import sqrt
+import warnings
+warnings.filterwarnings("ignore")
 
 
 # Load the data
@@ -34,13 +39,52 @@ for dataset in config:
 results_date = pd.DataFrame(columns=["Model", "Lag", "Future", "MAE", "RMSE", "Error_Steps"])
 results_hour = pd.DataFrame(columns=["Model", "Lag", "Future", "MAE", "RMSE", "Error_Steps"])
 
-# Train LSTM models
-"""for i in all_models:
-    if i.startswith("LSTM"):
-        print(i)
+
+row = 0
+for i in all_models:
+    if i.startswith("RNN"):
         current = all_models[i]
-        print(current.lag, current.future, current.hyperparams)"""
 
+        units = current.hyperparams['units']
+        lr = current.hyperparams['lr']
+        m_batch_size = current.hyperparams['m_batch_size']
+        #n_timesteps
 
-print("Done")
+        model = simple_RNN(units, current.X_train.shape[1], current.X_train.shape[2], current.future)
+        
+        history = model.fit(
+            current.X_train,
+            current.y_train,
+            validation_data=(current.X_val, current.y_val),
+            epochs=1,
+            batch_size=m_batch_size,
+            verbose=0
+            )
 
+        #model.save("models/"+i+".h5")
+
+        y_pred = model.predict(current.X_test).squeeze()
+
+        mae = mean_absolute_error(current.y_test, y_pred)
+        error_steps = int(
+            current.scaler.inverse_transform(np.array(mae).reshape(1, -1))[0][0]
+            )
+        rmse = sqrt(mean_squared_error(current.y_test, y_pred))
+
+        if current.future == 1:
+            results_date.loc[row] = [
+                            current.name, current.lag, current.future,
+                            round(mae, 4),
+                            round(rmse, 4),
+                            error_steps]
+        else:
+            results_hour.loc[row] = [
+                            current.name, current.lag, current.future,
+                            round(mae, 4),
+                            round(rmse, 4),
+                            error_steps]
+        
+        row += 1
+
+print(results_date)
+print(results_hour)
