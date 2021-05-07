@@ -1,5 +1,5 @@
 from keras.models import Sequential
-from keras.layers import Dense, LSTM, Bidirectional, SimpleRNN, Flatten, TimeDistributed, ConvLSTM2D, Dropout
+from keras.layers import Dense, LSTM, Bidirectional, SimpleRNN, Flatten, TimeDistributed, ConvLSTM2D, Dropout, GRU
 from keras.layers.convolutional import Conv1D, MaxPooling1D
 from keras.callbacks import EarlyStopping
 from keras.optimizers import Adam
@@ -109,7 +109,7 @@ def BLSTM_model(units, n_hidden, n_timestamps, n_features, next_predicted=1, lr=
             )
         )
     model.add(Dense(next_predicted))
-    model.compile(optimizer=opt, loss='mse')
+    model.compile(optimizer=opt, loss='mse', metrics=['mean_absolute_error'])
     return model
 
 

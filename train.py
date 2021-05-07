@@ -72,6 +72,7 @@ for i in rnns:
 
     #model.save("models/"+i+".h5")
 
+    # TODO: add predictions to model containers
     y_pred = model.predict(X_test).squeeze()
 
     mae = mean_absolute_error(y_test, y_pred)
