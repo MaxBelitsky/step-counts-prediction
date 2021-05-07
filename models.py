@@ -4,6 +4,7 @@ from keras.layers.convolutional import Conv1D, MaxPooling1D
 from keras.callbacks import EarlyStopping
 from keras.optimizers import Adam
 from keras.utils import to_categorical
+from container import ModelContainer
 
 
 
@@ -38,60 +39,119 @@ def average(history, n, k):
     return predictions
 
 
-def simple_RNN(output_size, n_timestamps, n_features, next_predicted=1):
+def simple_RNN(units, n_hidden, n_timestamps, n_features, next_predicted=1, lr=0.001):
+    opt = Adam(learning_rate=lr)
     model = Sequential()
-    model.add(
-        SimpleRNN(
-            output_size,
+    for i in range(n_hidden):
+        model.add(
+            SimpleRNN(
+            units[i],
             activation='tanh',
-            input_shape=(n_timestamps, n_features)))
+            input_shape=(n_timestamps, n_features),
+            return_sequences=True)
+            )
+    model.add(SimpleRNN(units[-1],activation='tanh'))
     model.add(Dense(next_predicted))
-    model.compile(optimizer='adam', loss='mse', metrics=['mean_absolute_error'])
+    model.compile(optimizer=opt, loss='mse', metrics=['mean_absolute_error'])
 
     return model
 
 
-def vanilla_LSTM(output_sizes, n_hidden, n_timestamps,
-                n_features, predict_next=1, optimizer='adam'):
+def LSTM_model(units, n_hidden, n_timestamps,
+                n_features, predict_next=1, optimizer='adam', lr=0.001):
     """ Builds and compiles an LSTM model """
+    opt = Adam(learning_rate=lr)
     model = Sequential()
     for i in range(n_hidden):
         model.add(
-            LSTM(output_sizes[i],
+            LSTM(units[i],
             input_shape=(n_timestamps, n_features),
             activation='tanh',
             return_sequences=True)
             )
-    model.add(LSTM(output_size[-1], activation='tanh'))
+    model.add(LSTM(units[-1], activation='tanh'))
     model.add(Dense(predict_next))
-    model.compile(optimizer=optimizer, loss='mse', metrics=['mean_absolute_error'])
+    model.compile(optimizer=opt, loss='mse', metrics=['mean_absolute_error'])
     return model
 
 
-def BLSTM(output_size, n_timestamps, n_features, next_predicted=1):
+def GRU_model(units, n_hidden, n_timestamps,
+                n_features, predict_next=1, optimizer='adam', lr=0.001):
+    """ Builds and compiles an LSTM model """
+    opt = Adam(learning_rate=lr)
     model = Sequential()
+    for i in range(n_hidden):
+        model.add(
+            GRU(units[i],
+            input_shape=(n_timestamps, n_features),
+            activation='tanh',
+            return_sequences=True)
+            )
+    model.add(GRU(units[-1], activation='tanh'))
+    model.add(Dense(predict_next))
+    model.compile(optimizer=opt, loss='mse', metrics=['mean_absolute_error'])
+    return model
+
+
+def BLSTM_model(units, n_hidden, n_timestamps, n_features, next_predicted=1, lr=0.001):
+    opt = Adam(learning_rate=lr)
+    model = Sequential()
+    for i in range(n_hidden):
+        model.add(
+            Bidirectional(
+            LSTM(units[i], activation='tanh'),
+            input_shape=(n_timestamps, n_features),
+            return_sequences=True)
+            )
     model.add(
         Bidirectional(
-            LSTM(output_size, activation='tanh'),
-            input_shape=(n_timestamps, n_features)
+            LSTM(units[-1], activation='tanh')
             )
         )
     model.add(Dense(next_predicted))
-    model.compile(optimizer='adam', loss='mse')
+    model.compile(optimizer=opt, loss='mse')
     return model
 
 
-def Conv_LSTM(n_seq, n_steps, n_features, next_predicted=1):
+def Conv_LSTM(n_seq, n_steps, n_features, next_predicted=1,
+            lr=0.001, filters=64, kernel_size=(1, 3)):
+    opt = Adam(learning_rate=lr)
     model = Sequential()
     model.add(
         ConvLSTM2D(
-            filters=64,
-            kernel_size=(1,3),
+            filters=filters,
+            kernel_size=kernel_size,
             activation='tanh',
             input_shape=(n_seq, 1, n_steps, n_features)
             )
         )
     model.add(Flatten())
     model.add(Dense(next_predicted))
-    model.compile(optimizer='adam', loss='mse', metrics=['mean_absolute_error'])
+    model.compile(optimizer=opt, loss='mse', metrics=['mean_absolute_error'])
     return model
+
+
+def create_models(config, steps_date, steps_hour, augmented_steps_date, types='all'):
+    models = {}
+    # Fill the containers with data
+    for dataset in config:
+        lags = config[dataset]["lag"]
+        future = config[dataset]["future"]
+
+        for lag in lags:
+            
+            if types == 'all':
+                to_create = config[dataset]["models"]
+            else:
+                to_create = types
+
+            for model in to_create:
+                if dataset == "augmented_steps_date":
+                    name = model + f"_{lag}_{future}_aug"
+                else:
+                    name = model + f"_{lag}_{future}"
+
+                models[name] = ModelContainer(
+                    name, model, config[dataset]["models"][model], 
+                    eval(dataset), lag, future)
+    return models

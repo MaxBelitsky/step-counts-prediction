@@ -28,7 +28,7 @@ class ModelContainer:
         # Normalize the data with MinMax normalization
         self.scaler = MinMaxScaler()
         if len(self.data.shape) == 1:
-            n_features = 1
+            self.n_features = 1
             train_data = self.scaler.fit_transform(
                 train_data.to_numpy().reshape(-1, 1))
             val_data = self.scaler.transform(
@@ -37,7 +37,7 @@ class ModelContainer:
                 test_data.to_numpy().reshape(-1, 1))
         else:
             # TODO: df["Steps"] instead of .iloc
-            n_features = train_data.shape[1]
+            self.n_features = train_data.shape[1]
             train_data.iloc[:, 0] = self.scaler.fit_transform(
                 train_data.iloc[:, 0].to_numpy().reshape(-1, 1))
             val_data.iloc[:, 0] = self.scaler.transform(
@@ -45,50 +45,85 @@ class ModelContainer:
             test_data.iloc[:, 0] = self.scaler.transform(
                 test_data.iloc[:, 0].to_numpy().reshape(-1, 1))
 
+        # Convert sequence to supervised sequence
+        if self.model_type == "ConvLSTM" and self.lag % 2 != 0:
+            # TODO: complete the function
+            self.lag = self.lag + 1
+
+        self.X_train, self.y_train = to_supervised(
+            np.concatenate((train_data, val_data[:self.future])),
+            self.lag,
+            self.future
+            )
+        self.X_val, self.y_val = to_supervised(
+            np.concatenate((val_data, test_data[:self.future])),
+            self.lag,
+            self.future
+            )
+        self.X_test, self.y_test = to_supervised(test_data,
+            self.lag,
+            self.future
+            )
+        
+        # Select only steps as a y variable
+        if len(self.data.shape) > 1:
+            self.y_train = self.y_train[:, 0]
+            self.y_val = self.y_val[:, 0]
+            self.y_test = self.y_test[:, 0]
+
+        # Reshape the data
+        self.reshape()
+
+    def reshape(self):
         if self.model_type == "Baseline":
             pass
         elif self.model_type == "ConvLSTM":
             # TODO: complete the function
-            print(self.model_type)
-        else:
-            # Convert sequence to supervised sequence
-            self.X_train, self.y_train = to_supervised(
-                np.concatenate((train_data, val_data[:self.future])),
-                self.lag,
-                self.future
-                )
-            self.X_val, self.y_val = to_supervised(
-                np.concatenate((val_data, test_data[:self.future])),
-                self.lag,
-                self.future
-                )
-            self.X_test, self.y_test = to_supervised(test_data,
-                self.lag,
-                self.future
-                )
-            
-            if len(self.data.shape) > 1:
-                self.y_train = self.y_train[:, 0]
-                self.y_val = self.y_val[:, 0]
-                self.y_test = self.y_test[:, 0]
+            # Reshape to (samples, timesteps, rows, columns, features)
+            self.n_seq = self.hyperparams['n_seq']
 
+            self.X_train = self.X_train.reshape(
+                self.X_train.shape[0],
+                self.n_seq,
+                1,
+                self.X_train.shape[1]//self.n_seq,
+                self.n_features)
+            
+            self.X_val = self.X_val.reshape(
+                self.X_val.shape[0],
+                self.n_seq,
+                1,
+                self.X_val.shape[1]//self.n_seq,
+                self.n_features)
+
+            self.X_test = self.X_test.reshape(
+                self.X_test.shape[0],
+                self.n_seq,
+                1,
+                self.X_test.shape[1]//self.n_seq,
+                self.n_features)
+
+        else:
             # Reshape to (samples, timesteps, features)
             self.X_train = self.X_train.reshape(
                 self.X_train.shape[0],
                 self.X_train.shape[1],
-                n_features
+                self.n_features
                 )
             self.X_val = self.X_val.reshape(
                 self.X_val.shape[0],
                 self.X_val.shape[1],
-                n_features
+                self.n_features
                 )
             
             self.X_test = self.X_test.reshape(
                 self.X_test.shape[0],
                 self.X_test.shape[1],
-                n_features
+                self.n_features
                 )
+
+    def get_data(self):
+        return self.X_train, self.y_train, self.X_val, self.y_val, self.X_test, self.y_test
 
     def __repr__(self):
         return "{}".format(self.name)

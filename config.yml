@@ -1,74 +1,95 @@
 steps_date:
   models:
     RNN:
-      units: 1
-      lr: 0.001
+      units: [1]
+      n_hidden: 0
+      lr: 0.0001
       m_batch_size: 8
     LSTM:
-      units: 1
-      lr: 0.001
+      units: [1]
+      n_hidden: 0
+      lr: 0.0001
       m_batch_size: 8
     BLSTM:
-      units: 1
-      lr: 0.001
+      units: [1]
+      n_hidden: 0
+      lr: 0.0001
       m_batch_size: 8
     GRU:
-      units: 1
-      lr: 0.001
+      units: [1]
+      n_hidden: 0
+      lr: 0.0001
       m_batch_size: 8
     ConvLSTM:
       units: 
-      lr: 0.001
+      lr: 0.0001
       m_batch_size: 8
-  lag: [1, 7, 14, 21, 28]
+      filters: 16
+      kernel_size: (1, 2)
+      n_seq: 2
+  lag: [7, 14, 21, 28]
   future: 1
 # ------------------ 
 steps_hour:
   models:
     RNN:
-      units: 1
+      units: [1]
+      n_hidden: 0
       lr: 0.01
       m_batch_size: 16
     LSTM:
-      units: 1
-      lr: 0.001
+      units: [1]
+      n_hidden: 0
+      lr: 0.0001
       m_batch_size: 16
     BLSTM:
-      units: 1
-      lr: 0.001
+      units: [1]
+      n_hidden: 0
+      lr: 0.0001
       m_batch_size: 16
     GRU:
-      units: 1
-      lr: 0.001
+      units: [1]
+      n_hidden: 0
+      lr: 0.0001
       m_batch_size: 16
     ConvLSTM:
       units: 
-      lr: 0.001
+      lr: 0.0001
       m_batch_size: 16
+      n_seq: 2
+      filters: 16
+      kernel_size: (1, 2)
   lag: [24, 48, 72]
   future: 24
 # ------------------
 augmented_steps_date:
   models:
     RNN:
-      units: 1
+      units: [1]
+      n_hidden: 0
       lr: 0.01
       m_batch_size: 8
     LSTM:
-      units: 1
-      lr: 0.001
+      units: [1]
+      n_hidden: 0
+      lr: 0.0001
       m_batch_size: 8
     BLSTM:
-      units: 1
-      lr: 0.001
+      units: [1]
+      n_hidden: 0
+      lr: 0.0001
       m_batch_size: 8
     GRU:
-      units: 1
-      lr: 0.001
+      units: [1]
+      n_hidden: 0
+      lr: 0.0001
       m_batch_size: 8
     ConvLSTM:
       units: 1
-      lr: 0.001
+      lr: 0.0001
       m_batch_size: 8
-  lag: [1, 7, 14, 21, 28]
+      n_seq: 2
+      filters: 16
+      kernel_size: (1, 2)
+  lag: [7, 14, 21, 28]
   future: 1
