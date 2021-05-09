@@ -1,5 +1,8 @@
 steps_date:
   models:
+    Baseline:
+      future: 1
+      lag: 1
     RNN:
       units: [1]
       n_hidden: 0
@@ -8,17 +11,17 @@ steps_date:
     LSTM:
       units: [1]
       n_hidden: 0
-      lr: 0.0001
+      lr: 0.008
       m_batch_size: 8
     BLSTM:
-      units: [1]
-      n_hidden: 0
-      lr: 0.0001
+      units: [16, 128, 256]
+      n_hidden: 2
+      lr: 0.005
       m_batch_size: 8
     GRU:
       units: [1]
       n_hidden: 0
-      lr: 0.0001
+      lr: 0.008
       m_batch_size: 8
     ConvLSTM:
       units: 
@@ -32,6 +35,9 @@ steps_date:
 # ------------------ 
 steps_hour:
   models:
+    Baseline:
+      future: 24
+      lag: 24
     RNN:
       units: [1]
       n_hidden: 0
@@ -64,6 +70,7 @@ steps_hour:
 # ------------------
 augmented_steps_date:
   models:
+    Baseline:
     RNN:
       units: [1]
       n_hidden: 0

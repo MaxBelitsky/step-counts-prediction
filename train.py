@@ -35,7 +35,7 @@ steps_hour = pd.DataFrame(np.arange(0, 1000))
 augmented_steps_date = pd.DataFrame(np.arange(0, 10000).reshape(1000, 10))"""
 
 # Create RNN models
-rnns = create_models(config, steps_date, steps_hour, augmented_steps_date, ["BLSTM"])
+rnns = create_models(config, steps_date, steps_hour, augmented_steps_date, ["LSTM"])
 
 # Create two results DataFrames
 results_date = pd.DataFrame(columns=["Model", "Lag", "MAE", "RMSE", "Error_Steps"])
@@ -43,7 +43,7 @@ results_hour = pd.DataFrame(columns=["Model", "Lag", "MAE", "RMSE", "Error_Steps
 
 #EPOCHS = 1000
 row = 0
-
+"""
 
 for i in rnns:
     current = rnns[i]
@@ -98,4 +98,26 @@ for i in rnns:
 
 
 print(results_date)
-print(results_hour)
+print(results_hour)"""
+
+#TODO: add weights initializer
+# TODO: create a custom early stopping
+# TODO: remove personal info from datasets
+
+
+baselines = create_models(config, steps_date, steps_hour, augmented_steps_date, ["Baseline"])
+
+for i in baselines:
+    current = baselines[i]
+
+    y_pred = naive(current.X_test, current.future)
+    mae = mean_absolute_error(current.y_test, y_pred)
+    error_steps = int(
+        current.scaler.inverse_transform(np.array(mae).reshape(1, -1))[0][0]
+        )
+
+    print(mae, error_steps)
+
+    plt.plot(current.y_test)
+    plt.plot(y_pred)
+    plt.show()

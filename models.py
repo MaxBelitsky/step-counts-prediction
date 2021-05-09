@@ -1,45 +1,28 @@
 from keras.models import Sequential
-from keras.layers import Dense, LSTM, Bidirectional, SimpleRNN, Flatten, TimeDistributed, ConvLSTM2D, Dropout, GRU
-from keras.layers.convolutional import Conv1D, MaxPooling1D
+from keras.layers import Dense, LSTM, Bidirectional, SimpleRNN, Flatten, TimeDistributed, ConvLSTM2D, GRU
 from keras.callbacks import EarlyStopping
 from keras.optimizers import Adam
-from keras.utils import to_categorical
 from container import ModelContainer
+import numpy as np
 
 
 
-def naive(X_test, n, k):
-    if k == 1:
-        return X_test[:, -1].flatten()
-    
-    predictions = []
-    for i in range(len(X_test)):
-        t = k
-        curr_window = X_test[i, :]
-        curr_predictions = []
-        while t != 0:
-            prediction = curr_window[-1]
-            curr_predictions.append(prediction)
-            curr_window = np.append(curr_predictions, prediction)
-            t -= 1
-        predictions.append(curr_predictions)
-    return predictions
+def naive(X_test, k):
+        if k == 1:
+            return X_test[:, -1].flatten()
+        return X_test[:, -k:, -1]
 
 
-def average(history, n, k):
-  if k == 1:
-    return np.mean(history[-n:])
-  else:
-    predictions = []
-    while k != 0:
-      prediction = np.mean(history[-n:])
-      predictions.append(prediction)
-      history = np.append(history, prediction)
-      k -= 1
-    return predictions
+def average(history, additional, lag, data_type='steps_date'):
+    if lag == 1:
+        index = len(history)-1
+        additional = additional.loc[:index]
+        combined = pd.concat([pd.DataFrame(history, columns=['value']), additional], axis=1)
+        dow = combined.iloc[-1, :].dow
+        return combined.value[combined.dow == dow].mean()
 
 
-def simple_RNN(units, n_hidden, n_timestamps, n_features, next_predicted=1, lr=0.001):
+def simple_RNN(units, n_hidden, n_timestamps, n_features, predict_next=1, lr=0.001):
     opt = Adam(learning_rate=lr)
     model = Sequential()
     for i in range(n_hidden):
@@ -51,7 +34,7 @@ def simple_RNN(units, n_hidden, n_timestamps, n_features, next_predicted=1, lr=0
             return_sequences=True)
             )
     model.add(SimpleRNN(units[-1],activation='tanh'))
-    model.add(Dense(next_predicted))
+    model.add(Dense(predict_next))
     model.compile(optimizer=opt, loss='mse', metrics=['mean_absolute_error'])
 
     return model
@@ -69,9 +52,10 @@ def LSTM_model(units, n_hidden, n_timestamps,
             activation='tanh',
             return_sequences=True)
             )
-    model.add(LSTM(units[-1], activation='tanh'))
+    model.add(LSTM(units[-1], activation='tanh', input_shape=(n_timestamps, n_features)))
     model.add(Dense(predict_next))
     model.compile(optimizer=opt, loss='mse', metrics=['mean_absolute_error'])
+    #model.build()
     return model
 
 
@@ -93,7 +77,7 @@ def GRU_model(units, n_hidden, n_timestamps,
     return model
 
 
-def BLSTM_model(units, n_hidden, n_timestamps, n_features, next_predicted=1, lr=0.001):
+def BLSTM_model(units, n_hidden, n_timestamps, n_features, predict_next=1, lr=0.001):
     opt = Adam(learning_rate=lr)
     model = Sequential()
     for i in range(n_hidden):
@@ -108,12 +92,12 @@ def BLSTM_model(units, n_hidden, n_timestamps, n_features, next_predicted=1, lr=
             LSTM(units[-1], activation='tanh')
             )
         )
-    model.add(Dense(next_predicted))
+    model.add(Dense(predict_next))
     model.compile(optimizer=opt, loss='mse', metrics=['mean_absolute_error'])
     return model
 
 
-def Conv_LSTM(n_seq, n_steps, n_features, next_predicted=1,
+def Conv_LSTM(n_seq, n_steps, n_features, predict_next=1,
             lr=0.001, filters=64, kernel_size=(1, 3)):
     opt = Adam(learning_rate=lr)
     model = Sequential()
@@ -126,7 +110,7 @@ def Conv_LSTM(n_seq, n_steps, n_features, next_predicted=1,
             )
         )
     model.add(Flatten())
-    model.add(Dense(next_predicted))
+    model.add(Dense(predict_next))
     model.compile(optimizer=opt, loss='mse', metrics=['mean_absolute_error'])
     return model
 
@@ -138,20 +122,28 @@ def create_models(config, steps_date, steps_hour, augmented_steps_date, types='a
         lags = config[dataset]["lag"]
         future = config[dataset]["future"]
 
-        for lag in lags:
-            
-            if types == 'all':
-                to_create = config[dataset]["models"]
-            else:
-                to_create = types
+        if types == 'all':
+            to_create = config[dataset]["models"]
+        else:
+            to_create = types
 
-            for model in to_create:
-                if dataset == "augmented_steps_date":
-                    name = model + f"_{lag}_{future}_aug"
-                else:
-                    name = model + f"_{lag}_{future}"
+        if to_create == ['Baseline']:
+            if dataset != "augmented_steps_date":
+                lag = config[dataset]["models"]['Baseline']['lag']
+                future = config[dataset]["models"]['Baseline']['future']
+                models['Baseline_'+dataset] = ModelContainer('Baseline', 
+                        "Baseline", config[dataset]["models"]["Baseline"], 
+                        eval(dataset), lag, future)
+        
+        else:
+            for lag in lags:
+                for model in to_create:
+                    if dataset == "augmented_steps_date":
+                        name = model + f"_{lag}_{future}_aug"
+                    else:
+                        name = model + f"_{lag}_{future}"
 
-                models[name] = ModelContainer(
-                    name, model, config[dataset]["models"][model], 
-                    eval(dataset), lag, future)
+                    models[name] = ModelContainer(
+                        name, model, config[dataset]["models"][model], 
+                        eval(dataset), lag, future)
     return models

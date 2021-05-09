@@ -12,8 +12,8 @@ def to_supervised(sequence, n_previous, n_future):
     :param n_previous: int; number of past data points (N)
     :param n_future: int; number of data points to be predicted (K)
     :returns:
-        - X: (seq. length x n_previous) numpy array with the previous observations
-        - y: (seq. length x n_fututre) numpy array with the target observations
+        X: (seq. length x n_previous) numpy array with the previous observations
+        y: (seq. length x n_fututre) numpy array with the target observations
     """
     
     X, y = [], []
@@ -25,6 +25,13 @@ def to_supervised(sequence, n_previous, n_future):
         i += 1
 
     return np.array(X), np.array(y).squeeze()
+
+
+def from_supervised(data):
+    out = data[0]
+    for i in range(data[1:].shape[0]):
+        out = np.append(out, data[i][-1])
+    return out
 
 
 def convert_steps(steps, exclude_corona=True):
@@ -67,11 +74,19 @@ def aggregate_steps(steps, grouping=['date']):
     """
     Aggregates the steps by date or by hour
 
-    :param steps: pandas DataFrame; the raw steps data
-    :param grouping: list; aggregate by date or by hour passing ['date', 'hour']
-    :returns: pandas DataFrame; aggregated steps
+    :param DataFrame steps: the raw steps data
+    :param list grouping: aggregate by date or by hour passing ['date', 'hour']
+    :returns: aggregated steps
+    :rtype: DataFrame
     """
-    return convert_steps(steps).groupby(grouping)['value'].sum().reset_index(name='Steps')
+    if grouping == ['date', 'hour']:
+        return convert_steps(steps).groupby(['date', 'hour'], as_index=False).agg(
+            {'value': 'sum', 'date': 'first', 'hour': 'first'}
+        )
+
+    return convert_steps(steps).groupby(grouping, as_index=False).agg(
+        {'value': 'sum', 'date': 'first', 'dow': 'first'}
+    )
 
 
 def augment(steps, add_month=True, add_year=True,
@@ -81,12 +96,13 @@ def augment(steps, add_month=True, add_year=True,
     converts the date column to sin and cos so that the models
     have the information about month and year periods
 
-    :param steps: pandas DataFrame; the raw steps data
-    :param add_month: bool; indicates whether to include periodicity by month
-    :param add_year: bool; indicates whether to include periodicity by year
-    :param add_weekend: bool; indicates whether to include weekend data
-    :param add_holiday: bool; indicates whether to include holiday data
-    :returns: pandas DataFrame; augmented steps
+    :param DataFrame steps: the raw steps data
+    :param bool add_month: indicates whether to include periodicity by month
+    :param bool add_year: indicates whether to include periodicity by year
+    :param bool add_weekend: indicates whether to include weekend data
+    :param bool add_holiday: indicates whether to include holiday data
+    :returns: augmented steps
+    :rtype: DataFrame
     """
 
     temp = aggregate_steps(steps)
@@ -125,6 +141,24 @@ def augment(steps, add_month=True, add_year=True,
         temp['Year sin'] = np.sin(timestamp_s * (2 * np.pi / year))
         temp['Year cos'] = np.cos(timestamp_s * (2 * np.pi / year))
 
-    # Remove the date column
+    # Remove the date and day of the week columns
     temp = temp.drop('date', axis=1)
+    temp = temp.drop('dow', axis=1)
     return temp
+
+
+def hours_to_date(stpes_hours, dates_hours):
+    """
+    Converts steps/hour to steps/date
+
+    :param DataFrame stpes_hours: df with steps/hour
+    :param DataFrame dates_hours: df with dates and hours from the initial data
+    :returns: steps/date
+    :rtype: DataFrame
+    """
+    steps = pd.concat([stpes_hours, dates_hours], axis=1)
+    dates = steps['date'].unique()
+    hours = np.arange(24)
+    idx = pd.MultiIndex.from_product((dates, hours), names=['date', 'hour'])
+    steps = steps.set_index(['date', 'hour']).reindex(idx, fill_value=0).reset_index()
+    return steps.groupby(['date'])['value'].sum().reset_index(name='Steps').Steps
