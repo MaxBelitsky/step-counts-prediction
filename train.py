@@ -121,3 +121,5 @@ for i in baselines:
     plt.plot(current.y_test)
     plt.plot(y_pred)
     plt.show()
+
+# TODO: first pre-train the models for 10 epochs

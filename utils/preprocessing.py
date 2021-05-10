@@ -29,7 +29,7 @@ def to_supervised(sequence, n_previous, n_future):
 
 def from_supervised(data):
     out = data[0]
-    for i in range(data[1:].shape[0]):
+    for i in range(1, data.shape[0]):
         out = np.append(out, data[i][-1])
     return out
 

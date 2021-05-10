@@ -30,7 +30,7 @@ steps_date:
       filters: 16
       kernel_size: (1, 2)
       n_seq: 2
-  lag: [7, 14, 21, 28]
+  lag: [7, 14, 21]
   future: 1
 # ------------------ 
 steps_hour:
@@ -98,5 +98,5 @@ augmented_steps_date:
       n_seq: 2
       filters: 16
       kernel_size: (1, 2)
-  lag: [7, 14, 21, 28]
+  lag: [7, 14, 21]
   future: 1
