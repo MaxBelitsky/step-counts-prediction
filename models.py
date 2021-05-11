@@ -115,35 +115,33 @@ def Conv_LSTM(n_seq, n_steps, n_features, predict_next=1,
     return model
 
 
-def create_models(config, steps_date, steps_hour, augmented_steps_date, types='all'):
+def create_models(config, dataset, data, types='all'):
     models = {}
     # Fill the containers with data
-    for dataset in config:
-        lags = config[dataset]["lag"]
-        future = config[dataset]["future"]
+    lags = config[dataset]["lag"]
+    future = config[dataset]["future"]
 
-        if types == 'all':
-            to_create = config[dataset]["models"]
-        else:
-            to_create = types
+    if types == 'all':
+        to_create = config[dataset]["models"]
+    else:
+        to_create = types
 
-        if to_create == ['Baseline']:
-            if dataset != "augmented_steps_date":
-                lag = config[dataset]["models"]['Baseline']['lag']
-                future = config[dataset]["models"]['Baseline']['future']
-                models['Baseline_'+dataset] = ModelContainer('Baseline', 
-                        "Baseline", config[dataset]["models"]["Baseline"], 
-                        eval(dataset), lag, future)
-        
-        else:
-            for lag in lags:
-                for model in to_create:
-                    if dataset == "augmented_steps_date":
-                        name = model + f"_{lag}_{future}_aug"
-                    else:
-                        name = model + f"_{lag}_{future}"
+    if to_create == ['Baseline']:
+        if dataset != "augmented_steps_date":
+            lag = config[dataset]["models"]['Baseline']['lag']
+            future = config[dataset]["models"]['Baseline']['future']
+            models['Baseline_'+dataset] = ModelContainer('Baseline', 
+                    "Baseline", config[dataset]["models"]["Baseline"], 
+                    data, lag, future)
+    else:
+        for lag in lags:
+            for model in to_create:
+                if dataset == "augmented_steps_date":
+                    name = model + f"_{lag}_{future}_aug"
+                else:
+                    name = model + f"_{lag}_{future}"
 
-                    models[name] = ModelContainer(
-                        name, model, config[dataset]["models"][model], 
-                        eval(dataset), lag, future)
+                models[name] = ModelContainer(
+                    name, model, config[dataset]["models"][model], 
+                    data, lag, future)
     return models
