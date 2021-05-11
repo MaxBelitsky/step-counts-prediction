@@ -83,9 +83,8 @@ def BLSTM_model(units, n_hidden, n_timestamps, n_features, predict_next=1, lr=0.
     for i in range(n_hidden):
         model.add(
             Bidirectional(
-            LSTM(units[i], activation='tanh'),
-            input_shape=(n_timestamps, n_features),
-            return_sequences=True)
+            LSTM(units[i], activation='tanh', return_sequences=True),
+            input_shape=(n_timestamps, n_features))
             )
     model.add(
         Bidirectional(
