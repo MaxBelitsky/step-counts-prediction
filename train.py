@@ -123,3 +123,4 @@ for i in baselines:
     plt.show()
 
 # TODO: first pre-train the models for 10 epochs
+# TODO: all models to specific model containers

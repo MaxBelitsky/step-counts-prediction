@@ -13,13 +13,17 @@ def naive(X_test, k):
         return X_test[:, -k:, -1]
 
 
-def average(history, additional, lag, data_type='steps_date'):
+def average_by_dow(history, additional, lag, data_type='steps_date'):
     if lag == 1:
         index = len(history)-1
         additional = additional.loc[:index]
         combined = pd.concat([pd.DataFrame(history, columns=['value']), additional], axis=1)
         dow = combined.iloc[-1, :].dow
         return combined.value[combined.dow == dow].mean()
+
+
+def preceding_average(history, lag):
+    return history[-lag:].mean()
 
 
 def simple_RNN(units, n_hidden, n_timestamps, n_features, predict_next=1, lr=0.001):
