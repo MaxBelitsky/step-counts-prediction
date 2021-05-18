@@ -1,6 +1,6 @@
 
 from sklearn.preprocessing import MinMaxScaler
-from utils.preprocessing import to_supervised
+from .preprocessing import to_supervised
 import numpy as np
 import pandas as pd
 

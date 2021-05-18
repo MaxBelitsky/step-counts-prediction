@@ -2,7 +2,7 @@ from keras.models import Sequential
 from keras.layers import Dense, LSTM, Bidirectional, SimpleRNN, Flatten, TimeDistributed, ConvLSTM2D, GRU
 from keras.callbacks import EarlyStopping
 from keras.optimizers import Adam
-from container import ModelContainer
+from utils.container import ModelContainer
 import numpy as np
 import pandas as pd
 
