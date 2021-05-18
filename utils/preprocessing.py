@@ -7,13 +7,15 @@ import holidays
 
 def to_supervised(sequence, n_previous, n_future):
     """
+    Turns a sequence into a supervised sequence.
     
-    :param numpy array sequence: pandas DataFrame or list; input sequence
-    :param n_previous: int; number of past data points (N)
-    :param n_future: int; number of data points to be predicted (K)
+    :param numpy array sequence: input sequence
+    :param int n_previous: number of past data points (N)
+    :param int n_future: number of data points to be predicted (K)
     :returns:
         X: (seq. length x n_previous) numpy array with the previous observations
         y: (seq. length x n_fututre) numpy array with the target observations
+    :rtypes: numpy arrays
     """
     
     X, y = [], []
@@ -28,6 +30,14 @@ def to_supervised(sequence, n_previous, n_future):
 
 
 def from_supervised(data):
+    """
+    Turns a supervised sequence back into a normal sequence.
+    
+    :param numpy array data: pandas DataFrame or list; input sequence
+    :returns: unsupervised sequence
+    :rtype: numpy array
+    """
+
     out = data[0]
     for i in range(1, data.shape[0]):
         out = np.append(out, data[i][-1])
@@ -36,24 +46,24 @@ def from_supervised(data):
 
 def convert_steps(steps, exclude_corona=True):
     """
-    Adds converts starts date of each entry to datetime object and
-    adds year, month, date, day, hour, minute and day of the week to each entry
+    Converts start date of each entry to datetime object and
+    adds year, month, date, day, hour, minute and day of the week to each entry.
+    Taken from https://github.com/markwk/qs_ledger/tree/master/apple_health
 
     :param DataFrame steps: the raw steps data
-    :param bool exclude_corona: if True dicard the values after the beginning of coronavirus
+    :param bool exclude_corona: if True dicard the values after the beginning of pandemic
     :return: converted steps
     :rtype: DataFrame
     """
 
     convert_tz = lambda x: x.to_pydatetime().replace(tzinfo=pytz.utc).astimezone(pytz.timezone('Europe/Vilnius'))
     get_year = lambda x: convert_tz(x).year
-    get_month = lambda x: '{}-{:02}'.format(convert_tz(x).year, convert_tz(x).month) #inefficient
-    get_date = lambda x: '{}-{:02}-{:02}'.format(convert_tz(x).year, convert_tz(x).month, convert_tz(x).day) #inefficient
+    get_month = lambda x: '{}-{:02}'.format(convert_tz(x).year, convert_tz(x).month)
+    get_date = lambda x: '{}-{:02}-{:02}'.format(convert_tz(x).year, convert_tz(x).month, convert_tz(x).day)
     get_day = lambda x: convert_tz(x).day
     get_hour = lambda x: convert_tz(x).hour
     get_minute = lambda x: convert_tz(x).minute
     get_day_of_week = lambda x: convert_tz(x).weekday()
-
 
     steps['startDate'] = pd.to_datetime(steps['startDate'])
     steps['year'] = steps['startDate'].map(get_year)
@@ -72,7 +82,7 @@ def convert_steps(steps, exclude_corona=True):
 
 def aggregate_steps(steps, grouping=['date']):
     """
-    Aggregates the steps by date or by hour
+    Aggregates the steps by date or by hour.
 
     :param DataFrame steps: the raw steps data
     :param list grouping: aggregate by date or by hour passing ['date', 'hour']
@@ -94,7 +104,7 @@ def augment(steps, add_month=True, add_year=True,
     """
     Augments the data with weekend and holiday data and
     converts the date column to sin and cos so that the models
-    have the information about month and year periods
+    have access to the information about month and year periods.
 
     :param DataFrame steps: the raw steps data
     :param bool add_month: indicates whether to include periodicity by month
@@ -149,7 +159,7 @@ def augment(steps, add_month=True, add_year=True,
 
 def hours_to_date(stpes_hours, dates_hours):
     """
-    Converts steps/hour to steps/date
+    Converts steps/hour to steps/date.
 
     :param DataFrame stpes_hours: df with steps/hour
     :param DataFrame dates_hours: df with dates and hours from the initial data

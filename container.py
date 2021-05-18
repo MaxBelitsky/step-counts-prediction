@@ -6,6 +6,8 @@ import pandas as pd
 
 
 class ModelContainer:
+    """ Contains the data and hyperparameters for each model """
+    
     def __init__(self, name, model_type, hyperparams, data, lag, future):
         self.hyperparams = hyperparams
         self.data = data
@@ -18,7 +20,6 @@ class ModelContainer:
         self.prepare_data()
 
     def prepare_data(self):
-
         # Split to training, validation and test sets
         n = len(self.data)
         train_data = self.data[0:int(n*0.8)]
@@ -36,7 +37,7 @@ class ModelContainer:
             test_data = self.scaler.transform(
                 test_data.to_numpy().reshape(-1, 1))
         else:
-            # TODO: df["Steps"] instead of .iloc
+            # TODO: replace .iloc with ['value']
             self.n_features = train_data.shape[1]
             train_data.iloc[:, 0] = self.scaler.fit_transform(
                 train_data.iloc[:, 0].to_numpy().reshape(-1, 1))
@@ -45,11 +46,7 @@ class ModelContainer:
             test_data.iloc[:, 0] = self.scaler.transform(
                 test_data.iloc[:, 0].to_numpy().reshape(-1, 1))
 
-        # Convert sequence to supervised sequence
-        if self.model_type == "ConvLSTM" and self.lag % 2 != 0:
-            # TODO: complete the function
-            self.lag = self.lag + 1
-
+        # Convert sequence to a supervised sequence
         self.X_train, self.y_train = to_supervised(
             np.concatenate((train_data, val_data[:self.future])),
             self.lag,
@@ -65,7 +62,7 @@ class ModelContainer:
             self.future
             )
         
-        # Select only steps as a y variable
+        # Select only steps as a y variable if the data has more then 1 feature
         if len(self.data.shape) > 1:
             self.y_train = self.y_train[:, 0]
             self.y_val = self.y_val[:, 0]
@@ -75,35 +72,7 @@ class ModelContainer:
         self.reshape()
 
     def reshape(self):
-        if self.model_type == "Baseline":
-            pass
-        elif self.model_type == "ConvLSTM":
-            # TODO: complete the function
-            # Reshape to (samples, timesteps, rows, columns, features)
-            self.n_seq = self.hyperparams['n_seq']
-
-            self.X_train = self.X_train.reshape(
-                self.X_train.shape[0],
-                self.n_seq,
-                1,
-                self.X_train.shape[1]//self.n_seq,
-                self.n_features)
-            
-            self.X_val = self.X_val.reshape(
-                self.X_val.shape[0],
-                self.n_seq,
-                1,
-                self.X_val.shape[1]//self.n_seq,
-                self.n_features)
-
-            self.X_test = self.X_test.reshape(
-                self.X_test.shape[0],
-                self.n_seq,
-                1,
-                self.X_test.shape[1]//self.n_seq,
-                self.n_features)
-
-        else:
+        if self.model_type != "Baseline":
             # Reshape to (samples, timesteps, features)
             self.X_train = self.X_train.reshape(
                 self.X_train.shape[0],
@@ -123,24 +92,8 @@ class ModelContainer:
                 )
 
     def get_data(self):
+        """ A getter for the data """
         return self.X_train, self.y_train, self.X_val, self.y_val, self.X_test, self.y_test
 
     def __repr__(self):
         return "{}".format(self.name)
-    
-    def plot_predictions(self):
-        if self.future == 1 and self.predictions is not None:
-            plt.figure(figsize=(20, 5))
-            plt.plot(self.y_test)
-            plt.plot(self.predictions)
-        else:
-            print("k > 1")
-
-    def plot_history(self):
-        if history is not None:
-            plt.figure(figsize=(20, 5))
-            plt.plot(self.history.history['loss'])
-            plt.plot(self.history.history['val_loss'])
-            plt.plot(self.history.history['mean_absolute_error'])
-            plt.plot(self.history.history['val_mean_absolute_error'])
-            plt.legend()

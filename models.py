@@ -9,12 +9,24 @@ import pandas as pd
 
 
 def naive(X_test, k):
-        if k == 1:
-            return X_test[:, -1].flatten()
-        return X_test[:, -k:, -1]
+    """ Returns the last value of each sequence in X_test """
+
+    if k == 1:
+        return X_test[:, -1].flatten()
+    return X_test[:, -k:, -1]
 
 
-def average_by_dow(history, additional, lag, data_type='steps_date'):
+def average_by_dow(history, additional, lag):
+    """ 
+    Returns the average of steps on a particular weekday.
+    
+    :param list history: the whole history of step counts up to time step t
+    :param DataFrame additional: the dates from the initial data
+    :param int lag: the time lag
+    :returns: the average step counts on a particular weekday
+    :rtype: float
+    """
+
     if lag == 1:
         index = len(history)-1
         additional = additional.loc[:index]
@@ -24,10 +36,14 @@ def average_by_dow(history, additional, lag, data_type='steps_date'):
 
 
 def preceding_average(history, lag):
+    """ Returns the mean value of the preceding n (lag) days """
+
     return history[-lag:].mean()
 
 
 def simple_RNN(units, n_hidden, n_timestamps, n_features, predict_next=1, lr=0.001):
+    """ Creates and compiles a simple RNN model """
+
     opt = Adam(learning_rate=lr)
     model = Sequential()
     for i in range(n_hidden):
@@ -47,7 +63,8 @@ def simple_RNN(units, n_hidden, n_timestamps, n_features, predict_next=1, lr=0.0
 
 def LSTM_model(units, n_hidden, n_timestamps,
                 n_features, predict_next=1, optimizer='adam', lr=0.001):
-    """ Builds and compiles an LSTM model """
+    """ Creates and compiles an LSTM model """
+
     opt = Adam(learning_rate=lr)
     model = Sequential()
     for i in range(n_hidden):
@@ -66,7 +83,8 @@ def LSTM_model(units, n_hidden, n_timestamps,
 
 def GRU_model(units, n_hidden, n_timestamps,
                 n_features, predict_next=1, optimizer='adam', lr=0.001):
-    """ Builds and compiles an LSTM model """
+    """ Creates and compiles a GRU model """
+
     opt = Adam(learning_rate=lr)
     model = Sequential()
     for i in range(n_hidden):
@@ -83,6 +101,8 @@ def GRU_model(units, n_hidden, n_timestamps,
 
 
 def BLSTM_model(units, n_hidden, n_timestamps, n_features, predict_next=1, lr=0.001):
+    """ Creates and compiles a BLSTM model """
+
     opt = Adam(learning_rate=lr)
     model = Sequential()
     for i in range(n_hidden):
@@ -101,25 +121,19 @@ def BLSTM_model(units, n_hidden, n_timestamps, n_features, predict_next=1, lr=0.
     return model
 
 
-def Conv_LSTM(n_seq, n_steps, n_features, predict_next=1,
-            lr=0.001, filters=64, kernel_size=(1, 3)):
-    opt = Adam(learning_rate=lr)
-    model = Sequential()
-    model.add(
-        ConvLSTM2D(
-            filters=filters,
-            kernel_size=kernel_size,
-            activation='tanh',
-            input_shape=(n_seq, 1, n_steps, n_features)
-            )
-        )
-    model.add(Flatten())
-    model.add(Dense(predict_next))
-    model.compile(optimizer=opt, loss='mse', metrics=['mean_absolute_error'])
-    return model
-
-
 def create_models(config, dataset, data, types='all'):
+    """
+    Prepares the data for each model according to the configuration file.
+
+    :param dict config: a dictionary form the the configuration file
+    :param str dataset: the name of the dataset
+    :param DataFrame data: the actual data
+    :param str or list of str types: 
+        if set to "all", prepares the data for all the models in the config file
+        if set to the name of the model, prepares the data for models of specified type
+    :returns: a dictionary with ModelContainer objects
+    """
+
     models = {}
     # Fill the containers with data
     lags = config[dataset]["lag"]
